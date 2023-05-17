@@ -37,9 +37,63 @@ class CircuitSystem:
   def remove_component(self):
   
 class Component:
+  def update_power(self):
+    
+  def rotate_clockwise(self):
 
-class PowerBlock(Component):
-
+# Power Block with powered outputs in its triggered off state
+# triggered state turns on when at least one input is powered
+# and its outputs are depowered one frame later
+class PowerBlockNot(Component):
+  def __init__(self):
+    # List of which sides of the component is an input of output
+    self.inputs = []
+    self.outputs = []
+    
+    self.neighbors = {
+      Direction.UP: null,
+      Direction.RIGHT: null,
+      Direction.DOWN: null,
+      Direction.LEFT: null
+    }
+    
+    self.triggered = False
+    
+  def update_power(self):
+    for input_direction in inputs:
+      neighbor_component = self.neighbors[input_direction]
+      if neighbor_component != null and neighbor_component.is_direction_powered(input_direction.flip()):
+        self.triggered = True
+        break
+      self.triggered = False
+    
+  def rotate_clockwise(self):
+    for x in range(len(self.inputs)):
+      self.inputs[x] = self.inputs[x].right()
+    for x in range(len(self.outputs)):
+      self.outputs[x] = self.outputs[x].right()
+    
+  def is_direction_powered(self, direction):
+    return direction in self.outputs and not self.triggered
+    
+  def set_direction_input(self, direction):
+    if direction not in self.inputs:
+      self.inputs.append(direction)
+    if direction in self.outputs:
+      self.outputs.remote(direction)
+  
+  def set_direction_output(self, direction):
+    if direction not in self.outputs:
+      self.outputs.append(direction)
+    if direction in self.inputs:
+      self.inputs.remove(direction)
+      
+  def clear_direction_gate(self, direction):
+    if direction in self.inputs:
+      self.inputs.remove(direction)
+    elif direction in self.outputs:
+      self.outputs.remove(direction)
+  
 class Wire(Component):
 
 class WireNetwork:
