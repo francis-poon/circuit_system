@@ -112,12 +112,16 @@ class WireNetwork:
       self.wire_ids.add(wire.id)
       self.wire_list[wire.power_input_count] = wire
       
-    for neighbor_component in wire.neighbors.values:
-      if neighbor_component != null:
-        if neighbor_component.isinstance(Wire):
-          
-        elif neighbor_component.isinstance(CrossedWire):
-          
+      # Recursively add neighbors to network if they are a wire and aren't part of the network yet
+      for input_direction in wire.neighbors:
+        neighbor_component = wire.neighbors[input_direction]
+        neighbor_wire = null
+        if neighbor_component != null:
+          if neighbor_component.isinstance(Wire):
+            self.generate_network(neighbor_component)
+          elif neighbor_component.isinstance(CrossedWire):
+            self.generate_network(neighbor_component.get_wire(input_direction))
+
   
 #gameboard = []
 #update_list = []
