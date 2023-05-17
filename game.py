@@ -95,9 +95,29 @@ class PowerBlockNot(Component):
       self.outputs.remove(direction)
   
 class Wire(Component):
+  
+class CrossedWire:
+  def __init__(self, top_wire, bottom_wire):
+    self.top_wire = top_wire
+    self.bottom_wire = bottom_wire
+    
 
 class WireNetwork:
+  def __init__(self):
+    self.wire_list = [[],[],[],[],[]]
+    self.wire_ids = set()
 
+  def generate_network(self, wire):
+    if wire.id not in self.wire_ids:
+      self.wire_ids.add(wire.id)
+      self.wire_list[wire.power_input_count] = wire
+      
+    for neighbor_component in wire.neighbors.values:
+      if neighbor_component != null:
+        if neighbor_component.isinstance(Wire):
+          
+        elif neighbor_component.isinstance(CrossedWire):
+          
   
 #gameboard = []
 #update_list = []
