@@ -95,17 +95,33 @@ class PowerBlockNot(Component):
       self.outputs.remove(direction)
   
 class Wire(Component):
+  def is_connection(self, direction):
   
 class CrossedWire:
   def __init__(self, top_wire, bottom_wire):
     self.top_wire = top_wire
     self.bottom_wire = bottom_wire
     
+  def get_wire(self, direction):
+    if self.top_wire.is_connection(direction):
+      return self.top_wire
+    else:
+      return self.bottom_wire
 
 class WireNetwork:
   def __init__(self):
     self.wire_list = [[],[],[],[],[]]
     self.wire_ids = set()
+    
+    self.is_powered = False
+
+  def update_power(self):
+    for wire_set in self.wire_list:
+      for wire in wire_set:
+        if wire.has_powered_input:
+          self.is_powered = True
+          return
+    self.is_powered = False
 
   def generate_network(self, wire):
     if wire.id not in self.wire_ids:
