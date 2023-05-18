@@ -95,15 +95,41 @@ class PowerBlockNot(Component):
       self.outputs.remove(direction)
   
 class Wire(Component):
-  def is_connection(self, direction):
+  class Configuration(Enum):
+    NUB = [Direction.UP]
+    STRAIGHT = [Direction.UP, Direction.DOWN]
+    BEND = [Direction.UP, Direction.RIGHT]
+    T_INTERSECT = [Direction.UP, Direction.RIGHT, Direction.DOWN]
+    CROSS = [Direction.UP, Direction.RIGHT, Direction.DOWN, Direction.LEFT]
+    
+  def __init__(self, network=null, configuration=Configuration.STRAIGHT):
+    self.network = network
+    self.connections = configuration.value
+    
+    self.neighbors = {
+      Direction.UP: null,
+      Direction.RIGHT: null,
+      Direction.DOWN: null,
+      Direction.LEFT: null
+    }
+    
+  def rotate_clockwise(self):
+    for x in range(len(self.connections)):
+      self.connections[x] = self.connections[x].right()
   
-class CrossedWire:
+  def is_direction_powered(self, direction):
+    return self.has_connection(direction) and self.network.is_powered
+    
+  def has_connection(self, direction):
+    return direction in self.connections
+  
+class OverlappedWire:
   def __init__(self, top_wire, bottom_wire):
     self.top_wire = top_wire
     self.bottom_wire = bottom_wire
     
   def get_wire(self, direction):
-    if self.top_wire.is_connection(direction):
+    if self.top_wire.has_connection(direction):
       return self.top_wire
     else:
       return self.bottom_wire
@@ -129,13 +155,13 @@ class WireNetwork:
       self.wire_list[wire.power_input_count] = wire
       
       # Recursively add neighbors to network if they are a wire and aren't part of the network yet
-      for input_direction in wire.neighbors:
+      for input_direction in wire.connections:
         neighbor_component = wire.neighbors[input_direction]
         neighbor_wire = null
         if neighbor_component != null:
           if neighbor_component.isinstance(Wire):
             self.generate_network(neighbor_component)
-          elif neighbor_component.isinstance(CrossedWire):
+          elif neighbor_component.isinstance(OverlappedWire):
             self.generate_network(neighbor_component.get_wire(input_direction))
 
   
