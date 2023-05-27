@@ -135,8 +135,11 @@ class Wire(Component):
   def remove_neighbor(self, direction):
     self.neighbors[direction] = None
   
+  def is_powered(self):
+    return self.network.is_powered()
+  
   def is_direction_powered(self, direction):
-    return self.has_connection(direction) and self.network.is_powered
+    return self.has_connection(direction) and self.network.is_powered()
     
   def has_connection(self, direction):
     return direction in self.connections
@@ -168,6 +171,9 @@ class WireNetwork:
     self.wire_ids = set()
     
     self.is_powered = False
+
+  def is_powered(self):
+    return self.is_powered
 
   def update_power(self):
     for power_input_count in range(len(self.wire_list), 0):

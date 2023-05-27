@@ -1,7 +1,7 @@
 import pygame as pg
 import sys
 from pygame.locals import *
-from game_logic import Wire, CircuitSystem
+from game_logic import CircuitSystem, Wire, OverlappedWire, PowerBlockNot, Direction
 
 board_width, board_height = 3, 3
 component_width, component_height = 64, 64
@@ -32,19 +32,56 @@ wire_assets = {
   }
 }
 
+power_block_assets = {
+  PowerBlockNot: {
+    False: pg.transform.scale(pg.image.load("assets/depowered_power_block_not.png"), (component_width, component_height)),
+    True: pg.transform.scale(pg.image.load("assets/powered_power_block_not.png"), (component_width, component_height))
+  },
+  'INPUT': {
+    False: pg.transform.scale(pg.image.load("assets/depowered_power_block_input.png"), (component_width, component_height)),
+    True: pg.transform.scale(pg.image.load("assets/powered_power_block_input.png"), (component_width, component_height))
+  },
+  'OUTPUT': {
+    False: pg.transform.scale(pg.image.load("assets/depowered_power_block_output.png"), (component_width, component_height)),
+    True: pg.transform.scale(pg.image.load("assets/powered_power_block_output.png"), (component_width, component_height))
+  }
+}
+
 def draw_wire(wire):
   image = wire_assets[wire.configuration][True]
   image = pg.transform.rotate(image, (wire.rotation*90)%360*-1)
-  return image
+  return [image]
+  
+def draw_overlapped_wire(overlapped_wire):
+  bottom_image = draw_wire(overlapped_wire.bottom_wire)
+  top_image = draw_wire(overlapped_wire.top_wire)
+  return bottom_image + top_image
+  
+def draw_power_block(power_block):
+  images = []
+  images.append(power_block_assets[type(power_block)][True])
+  for input in power_block.inputs:
+    images.append(
+      pg.transform.rotate(power_block_assets['INPUT'][True], (input.value - 1)*90 % 360 * -1)
+    )
+  for output in power_block.outputs:
+    images.append(
+      pg.transform.rotate(power_block_assets['OUTPUT'][True], (output.value - 1)*90 % 360 * -1)
+    )
+    
+  return images
 
 def draw_component(board_width, board_height, component):
   switch = {
-    Wire: draw_wire
+    Wire: draw_wire,
+    OverlappedWire: draw_overlapped_wire,
+    PowerBlockNot: draw_power_block
   }
   
-  image = switch[type(component)](component)
+  images = switch[type(component)](component)
   position = board_width*component_width, board_height*component_height
-  screen.blit(image, position)
+  for image in images:
+    screen.blit(image, position)
   
 def draw_board(circuit_board):
   for height in range(len(circuit_board)):
@@ -58,9 +95,19 @@ wire_a = Wire()
 wire_b = Wire()
 wire_c = Wire()
 wire_c.rotate_clockwise()
+overlapped_wire = OverlappedWire(wire_a, wire_c)
+power_block_not = PowerBlockNot()
+power_block_not.set_direction_input(Direction.UP)
+power_block_not.set_direction_output(Direction.DOWN)
+power_block_not.set_direction_output(Direction.RIGHT)
+power_block_not.rotate_clockwise()
+power_block_not.rotate_clockwise()
+power_block_not.rotate_clockwise()
 circuit_system.add_component(wire_a, 0, 0)
 circuit_system.add_component(wire_b, 1, 0)
 circuit_system.add_component(wire_c, 2, 0)
+circuit_system.add_component(overlapped_wire, 0, 1)
+circuit_system.add_component(power_block_not, 1, 1)
 
 pg.init()
 fps = 30
