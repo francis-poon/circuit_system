@@ -18,8 +18,8 @@ class Direction(Enum):
   
 class CircuitSystem:
   
-  def __init__(self):
-    self.gameboard = []
+  def __init__(self, board_width, board_height):
+    self.circuit_board = [[None] * board_width for x in range(board_height)]
     self.wire_network_list = []
     self.power_block_list = []
     self.frame_count = 0
@@ -31,16 +31,18 @@ class CircuitSystem:
       wire_network.update_power()
       
   def rotate_component(self):
-  
-  def add_component(self):
+    return None
+  def add_component(self, component, col, row):
+    self.circuit_board[row][col] = component
   
   def remove_component(self):
+    return None
   
 class Component:
   def update_power(self):
-    
+    return None
   def rotate_clockwise(self):
-
+    return None
 # Power Block with powered outputs in its triggered off state
 # triggered state turns on when at least one input is powered
 # and its outputs are depowered one frame later
@@ -51,10 +53,10 @@ class PowerBlockNot(Component):
     self.outputs = []
     
     self.neighbors = {
-      Direction.UP: null,
-      Direction.RIGHT: null,
-      Direction.DOWN: null,
-      Direction.LEFT: null
+      Direction.UP: None,
+      Direction.RIGHT: None,
+      Direction.DOWN: None,
+      Direction.LEFT: None
     }
     
     self.triggered = False
@@ -62,7 +64,7 @@ class PowerBlockNot(Component):
   def update_power(self):
     for input_direction in inputs:
       neighbor_component = self.neighbors[input_direction]
-      if neighbor_component != null and neighbor_component.is_direction_powered(input_direction.flip()):
+      if neighbor_component != None and neighbor_component.is_direction_powered(input_direction.flip()):
         self.triggered = True
         break
       self.triggered = False
@@ -77,7 +79,7 @@ class PowerBlockNot(Component):
     self.neighbors[direction] = component
     
   def remove_neighbor(self, direction):
-    self.neighbors[direction] = null
+    self.neighbors[direction] = None
   
   def is_direction_powered(self, direction):
     return direction in self.outputs and not self.triggered
@@ -108,19 +110,22 @@ class Wire(Component):
     T_INTERSECT = [Direction.LEFT, Direction.RIGHT, Direction.DOWN]
     CROSS = [Direction.UP, Direction.RIGHT, Direction.DOWN, Direction.LEFT]
     
-  def __init__(self, network=null, configuration=Configuration.STRAIGHT):
+  def __init__(self, network=None, configuration=Configuration.STRAIGHT):
     self.network = network
+    self.configuration = configuration
     self.connections = configuration.value
-    self.power_input_count
+    self.rotation = 0
+    self.power_input_count = 0
     
     self.neighbors = {
-      Direction.UP: null,
-      Direction.RIGHT: null,
-      Direction.DOWN: null,
-      Direction.LEFT: null
+      Direction.UP: None,
+      Direction.RIGHT: None,
+      Direction.DOWN: None,
+      Direction.LEFT: None
     }
     
   def rotate_clockwise(self):
+    self.rotation = (self.rotation + 1) % 4
     for x in range(len(self.connections)):
       self.connections[x] = self.connections[x].right()
   
@@ -128,7 +133,7 @@ class Wire(Component):
     self.neighbors[direction] = component
     
   def remove_neighbor(self, direction):
-    self.neighbors[direction] = null
+    self.neighbors[direction] = None
   
   def is_direction_powered(self, direction):
     return self.has_connection(direction) and self.network.is_powered
@@ -137,7 +142,7 @@ class Wire(Component):
     return direction in self.connections
     
   def has_network(self):
-    return network == null
+    return network == None
   
 class OverlappedWire:
   def __init__(self, top_wire, bottom_wire):
@@ -180,8 +185,8 @@ class WireNetwork:
       # Recursively add neighbors to network if they are a wire and aren't part of the network yet
       for input_direction in wire.connections:
         neighbor_component = wire.neighbors[input_direction]
-        neighbor_wire = null
-        if neighbor_component != null:
+        neighbor_wire = None
+        if neighbor_component != None:
           if neighbor_component.isinstance(Wire):
             self.generate_network(neighbor_component)
           elif neighbor_component.isinstance(OverlappedWire):
@@ -209,7 +214,7 @@ class WireNetwork:
 #      
 #def update_power(gameboard):
 #  for neighbor in this.neighbors:
-#    if neighbor is not null:
+#    if neighbor is not None:
 #      if neighbor.is_updated() and neighbor.is_powered():
 #      
 #      
