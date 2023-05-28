@@ -18,8 +18,8 @@ class Direction(Enum):
   
 class CircuitSystem:
   
-  def __init__(self, board_width, board_height):
-    self.circuit_board = [[None] * board_width for x in range(board_height)]
+  def __init__(self, rows=0, cols=0):
+    self.circuit_board = CircuitBoard(rows=rows, cols=cols)
     self.wire_network_list = []
     self.power_block_list = []
     self.frame_count = 0
@@ -34,9 +34,43 @@ class CircuitSystem:
     return None
   def add_component(self, component, col, row):
     self.circuit_board[row][col] = component
+    for direction in Direction:
+      neighbor = self.circuit_board.get_direction(row, col, direction)
+      if neighbor != None:
+        component.set_neighbor(direction, neighbor)
+        neighbor.set_neighbor(direction.opposite(), component)
   
   def remove_component(self):
     return None
+  
+class CircuitBoard:
+  def __init__(self, rows=0, cols=0):
+    self.board = [[None] * cols for x in range(rows)]
+    
+  def __getitem__(self, key):
+    return self.board[key]
+    
+  def __setitem__(self, key, val):
+    self.board[key] = val
+    
+  def __delitem__(self, key):
+    self.board[key] = None
+    
+  def __len__(self):
+    return len(self.board)
+    
+  def get_direction(self, row, col, direction):
+    if direction == Direction.UP and row-1 >= 0:
+      return self.board[row-1][col]
+    if direction == Direction.RIGHT and col+1 < len(self.board[row]):
+      return self.board[row][col+1]
+    if direction == Direction.DOWN and row+1 < len(self.board):
+      return self.board[row+1][col]
+    if direction == Direction.LEFT and col-1 >= 0:
+      return self.board[row][col-1]
+    return None
+    
+  
   
 class Component:
   def update_power(self):
@@ -59,15 +93,18 @@ class PowerBlockNot(Component):
       Direction.LEFT: None
     }
     
+    self.update_queue = []
     self.triggered = False
     
   def update_power(self):
+    self.triggered = self.update_queue.pop(0) if len(self.update_queue) > 0 else False
+    update_value = False
     for input_direction in inputs:
       neighbor_component = self.neighbors[input_direction]
-      if neighbor_component != None and neighbor_component.is_direction_powered(input_direction.flip()):
-        self.triggered = True
+      if neighbor_component != None and neighbor_component.is_direction_powered(input_direction.opposite()):
+        update_value = True
         break
-      self.triggered = False
+    self.update_queue.append(update_value)
     
   def rotate_clockwise(self):
     for x in range(len(self.inputs)):
@@ -156,6 +193,10 @@ class OverlappedWire:
     self.topwire.rotate_clockwise()
     self.bottom_wire.rotate_clockwise()
     
+  def set_neighbor(self, direction, neighbor):
+    self.top_wire.set_neighbor(direction, neighbor)
+    self.bottom_wire.set_neighbor(direction, neighbor)
+    
   def is_direction_powered(self, direction):
     return self.get_wire(direction).is_direction_powered(direction)
   
@@ -196,7 +237,7 @@ class WireNetwork:
           if neighbor_component.isinstance(Wire):
             self.generate_network(neighbor_component)
           elif neighbor_component.isinstance(OverlappedWire):
-            self.generate_network(neighbor_component.get_wire(input_direction.flip()))
+            self.generate_network(neighbor_component.get_wire(input_direction.opposite()))
 
   def add_wire(self, wire):
     if component.isinstance(Wire) and wire.network != self:
