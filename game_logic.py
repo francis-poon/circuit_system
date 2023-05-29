@@ -29,8 +29,12 @@ class CircuitSystem:
       power_block.update_power()
     for wire_network in wire_network_list:
       wire_network.update_power()
+    frame_count += 1
       
   def rotate_component(self):
+    # rotate component
+    # if component was a wire, add wire to "recheck network" set
+    # overlapped wire will need to do this check if the overlapped wires are bends, but if they're straights, just swap their networks
     return None
   def add_component(self, component, col, row):
     self.circuit_board[row][col] = component
@@ -243,7 +247,9 @@ class WireNetwork:
     if component.isinstance(Wire) and wire.network != self:
       self.wire_list[wire.power_input_count].append(wire)
       wire.network = self
-      
+     
+  def merge_network(self, merging_network):
+    
       
   
 #gameboard = []
