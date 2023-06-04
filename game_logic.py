@@ -152,6 +152,7 @@ class Wire(Component):
     CROSS = [Direction.UP, Direction.RIGHT, Direction.DOWN, Direction.LEFT]
     
   def __init__(self, network=None, configuration=Configuration.STRAIGHT):
+    self.id = 0 # TODO: Generate UUID
     self.network = network
     self.configuration = configuration
     self.connections = configuration.value
@@ -228,29 +229,30 @@ class WireNetwork:
           return
     self.is_powered = False
 
-  def generate_network(self, wire):
-    if wire.id not in self.wire_ids:
-      self.wire_ids.add(wire.id)
-      self.wire_list[wire.power_input_count].append(wire)
+  @classmethod
+  def generate_network(cls, wire, network):
+    if wire.id not in network.wire_ids:
+      network.add_wire(wire)
       
       # Recursively add neighbors to network if they are a wire and aren't part of the network yet
       for input_direction in wire.connections:
         neighbor_component = wire.neighbors[input_direction]
         neighbor_wire = None
         if neighbor_component != None:
-          if neighbor_component.isinstance(Wire):
-            self.generate_network(neighbor_component)
+          if neighbor_component.isinstance(Wire) and neighbor_component.has_connection(input_direction.opposite():
+            cls.generate_network(neighbor_component)
           elif neighbor_component.isinstance(OverlappedWire):
-            self.generate_network(neighbor_component.get_wire(input_direction.opposite()))
+            cls.generate_network(neighbor_component.get_wire(input_direction.opposite()))
 
   def add_wire(self, wire):
-    if component.isinstance(Wire) and wire.network != self:
+    if component.isinstance(Wire) and wire.id not in self.wire_ids:
       self.wire_list[wire.power_input_count].append(wire)
+      self.wire_ids.add(wire.id)
       wire.network = self
      
   def merge_network(self, merging_network):
     
-      
+  def 
   
 #gameboard = []
 #update_list = []
