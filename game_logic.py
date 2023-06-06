@@ -21,8 +21,31 @@ class CircuitSystem:
   def __init__(self, rows=0, cols=0):
     self.circuit_board = CircuitBoard(rows=rows, cols=cols)
     self.wire_network_list = []
+    self.wires = [set(), set()]
     self.power_block_list = []
     self.frame_count = 0
+    self.editting = False
+    
+  def enable_edit(self):
+    self.editing = True
+    
+  def save_edit(self):
+    self.wire_network_list = []
+    
+    while len(self.wires[0]) > 0:
+      wire = self.wires[0].pop()
+      self.wires[1].add(wire)
+      
+      network = WireNetwork()
+      WireNetwork.generate_network(wire, network)
+      self.wire_network_list.append(network)
+      self.wires[1] = self.wires[1] | network.get_wires()
+      self.wires[0] = self.wires[0] - network.get_wires()
+      
+    self.wires[0] = self.wires[1]
+    self.wires[1] = {}
+    
+    self.editing = False
   
   def update_frame(self):
     for power_block in power_block_list:
@@ -157,7 +180,6 @@ class Wire(Component):
     self.configuration = configuration
     self.connections = configuration.value
     self.rotation = 0
-    self.power_input_count = 0
     
     self.neighbors = {
       Direction.UP: None,
@@ -165,6 +187,10 @@ class Wire(Component):
       Direction.DOWN: None,
       Direction.LEFT: None
     }
+    
+  def count_power_inputs(self):
+    # TODO: implement
+    return None
     
   def rotate_clockwise(self):
     self.rotation = (self.rotation + 1) % 4
@@ -246,9 +272,16 @@ class WireNetwork:
 
   def add_wire(self, wire):
     if component.isinstance(Wire) and wire.id not in self.wire_ids:
-      self.wire_list[wire.power_input_count].append(wire)
+      self.wire_list[wire.count_power_inputs()].append(wire)
       self.wire_ids.add(wire.id)
       wire.network = self
+      
+  def get_wires(self):
+    complete_set = set()
+    for wire_set in self.wire_list:
+      complete_set = complete_set | wire_set
+      
+    return complete_set
      
   def merge_network(self, merging_network):
     
