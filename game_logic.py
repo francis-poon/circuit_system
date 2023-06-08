@@ -1,5 +1,5 @@
 from enum import Enum
-
+import pickle
   
 class Direction(Enum):
   UP = 0
@@ -25,9 +25,19 @@ class CircuitSystem:
     self.power_block_list = []
     self.frame_count = 0
     self.editting = False
+    self.save_state = None
     
   def enable_edit(self):
-    self.editing = True
+    if self.editing == False:
+      self.save_state = None
+      self.save_state = pickle.dumps(self.__dict__)
+      self.editing = True
+    
+  def cancel_edit(self):
+    if self.editing == True:
+      self.__dict__ = pickle.loads(self.save_state)
+      self.save_state = None
+      self.editting = False
     
   def save_edit(self):
     self.wire_network_list = []
@@ -45,6 +55,7 @@ class CircuitSystem:
     self.wires[0] = self.wires[1]
     self.wires[1] = {}
     
+    self.save_state = None
     self.editing = False
   
   def update_frame(self):
@@ -98,16 +109,39 @@ class CircuitBoard:
     return None
     
   
-  
+# TODO: consolidate actual Component parent variables and methods
+# TODO: Have children use/overwrite Component variables and methods
 class Component:
+  def __init__(self):
+    self.neighbors = {
+      Direction.UP: None,
+      Direction.RIGHT: None,
+      Direction.DOWN: None,
+      Direction.LEFT: None
+    }
+    
   def update_power(self):
     return None
   def rotate_clockwise(self):
     return None
+    
+
+class PowerBlock(Component):
+  def __init__(self):
+    # TODO: Figure out how to use parent class self.neighbors variable
+    self.inputs = []
+    self.outputs = []
+    
+    self.update_queue = []
+    self.triggered = False
+    
+  def is_direction_output(self, direction):
+    return direction in self.outputs
+
 # Power Block with powered outputs in its triggered off state
 # triggered state turns on when at least one input is powered
 # and its outputs are depowered one frame later
-class PowerBlockNot(Component):
+class PowerBlockNot(PowerBlock):
   def __init__(self):
     # List of which sides of the component is an input of output
     self.inputs = []
@@ -189,8 +223,12 @@ class Wire(Component):
     }
     
   def count_power_inputs(self):
-    # TODO: implement
-    return None
+    power_input_count = 0
+    for connection in self.connections:
+      if self.neighbors[connection] != None and isinstance(self.neighbors[connection], PowerBlock)
+      and self.neighbors[connection].is_direction_output(connection.opposite()):
+        power_input_count += 1
+    return power_input_count
     
   def rotate_clockwise(self):
     self.rotation = (self.rotation + 1) % 4
@@ -282,31 +320,3 @@ class WireNetwork:
       complete_set = complete_set | wire_set
       
     return complete_set
-     
-  def merge_network(self, merging_network):
-    
-  def 
-  
-#gameboard = []
-#update_list = []
-#frame_count = 0
-#
-#def update_frame():
-#  while len(update_list > 0):
-#    component = update_list[0]
-#    updated_components = component.update_power(gameboard)
-#    
-#    for component in updated_components:
-#      update_list.remove(component)
-#      
-#      
-#def update_power(gameboard):
-#  for neighbor in this.neighbors:
-#    if neighbor is not None:
-#      if neighbor.is_updated() and neighbor.is_powered():
-#      
-#      
-#      
-#ingest next power state for all power blocks
-#for each non updated power block:
-#  for each powered output direction, if there is a neighbor, power that neighbor
