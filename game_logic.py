@@ -63,10 +63,11 @@ class CircuitSystem:
     if self.editing == True:
       return
 
-    for power_block in self.power_blocks:
-      power_block.update_power()
     for wire_network in self.wire_network_list:
       wire_network.update_power()
+    for power_block in self.power_blocks:
+      power_block.update_power()
+    
     self.frame_count += 1
       
   def rotate_component(self, row=None, col=None):
