@@ -25,7 +25,6 @@ class CircuitSystem:
     self.wires = [set(), set()]
     self.power_blocks = set()
     self.frame_count = 0
-    #TODO: Make it so modifying the game board isn't possible if editing is false
     self.editing = False
     self.save_state = None
     
@@ -63,12 +62,12 @@ class CircuitSystem:
   def update_frame(self):
     if self.editing == True:
       return
-  
-    for power_block in power_blocks:
+
+    for power_block in self.power_blocks:
       power_block.update_power()
-    for wire_network in wire_network_list:
+    for wire_network in self.wire_network_list:
       wire_network.update_power()
-    frame_count += 1
+    self.frame_count += 1
       
   def rotate_component(self, row=None, col=None):
     if self.editing == False or row == None or col == None:
@@ -79,7 +78,6 @@ class CircuitSystem:
   def add_component(self, component, row=None, col=None):
     if self.editing == False or row == None or col == None:
       return
-    # TODO: Check if col and row are invalid
     self.remove_component(row, col)
     self.circuit_board[row][col] = component
     if isinstance(component, Wire):
@@ -213,7 +211,7 @@ class PowerBlockNot(PowerBlock):
   def update_power(self):
     self.triggered = self.update_queue.pop(0) if len(self.update_queue) > 0 else False
     update_value = False
-    for input_direction in inputs:
+    for input_direction in self.inputs:
       neighbor_component = self.neighbors[input_direction]
       if neighbor_component != None and neighbor_component.is_direction_powered(input_direction.opposite()):
         update_value = True
@@ -235,6 +233,7 @@ class Wire(Component):
   def __init__(self, network=None, configuration=Configuration.STRAIGHT, rotation=0):
     super().__init__()
     self.network = network
+    self.configuration = configuration
     self.connections = list(configuration.value)
     self.rotation = 0
     for rotate in range(rotation%4): self.rotate_clockwise()
@@ -257,6 +256,12 @@ class Wire(Component):
   
   def is_direction_powered(self, direction):
     return self.has_connection(direction) and self.network.is_powered()
+    
+  def has_powered_input(self):
+    for connection in self.connections:
+      if isinstance(self.neighbors[connection], PowerBlock) and self.neighbors[connection].is_direction_powered(connection.opposite()):
+        return True
+    return False
     
   def has_connection(self, direction):
     return direction in self.connections
@@ -301,12 +306,12 @@ class WireNetwork:
     return self.__is_powered
 
   def update_power(self):
-    for power_input_count in range(len(self.wire_list), 0):
-      for wire in self.wire_list[power_input_count]:
-        if wire.has_powered_input:
-          self.is_powered = True
+    for wire_set in reversed(self.wire_list):
+      for wire in wire_set:
+        if wire.has_powered_input():
+          self.__is_powered = True
           return
-    self.is_powered = False
+    self.__is_powered = False
 
   @classmethod
   def generate_network(cls, wire, network):
