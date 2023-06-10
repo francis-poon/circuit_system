@@ -295,10 +295,10 @@ class WireNetwork:
     self.wire_list = [set(),set(),set(),set(),set()]
     self.wire_ids = set()
     
-    self.is_powered = False
+    self.__is_powered = False
 
   def is_powered(self):
-    return self.is_powered
+    return self.__is_powered
 
   def update_power(self):
     for power_input_count in range(len(self.wire_list), 0):
